@@ -1,10 +1,23 @@
 import math
 import pytest
 
-from models import black_scholes
+from models import black_scholes, black_scholes_delta
 
 def test_pc_parity():
-    pytest.skip("No put-call parity test created.")
+    # textbook test inputs for c = 4.76    
+    k = 40 # strike price
+    s = 42 # stock price
+    r = 0.1 # risk-free interest rate
+    sigma = 0.2 # volatility of underlying stock
+    t = 0.5 # time to expiry
+    q = 0.0 # no dividend for continuous dividend yield
+    
+    expected_diff = s*math.exp(-q*t) - k*math.exp(-r*t)
+
+    actual_diff = black_scholes(k,s,r,sigma,t,q,"call") - black_scholes(k,s,r,sigma,t,q,"put")
+
+    assert actual_diff == pytest.approx(expected_diff)
+
 
 def test_textbook_bs():
 
@@ -99,8 +112,23 @@ def test_deep_otm_bs():
     assert actual_call_price < 0.01, f"N should approach 0 as contract becomes deep out-of-the-money, but call price is {actual_call_price}."
     
 
-def test_greeks_bs():
-    pytest.skip("No greeks tests created.")
+def test_delta_bs():
+    
+    k = 40 # strike price
+    s = 42 # stock price
+    r = 0.1 # risk-free interest rate
+    sigma = 0.2 # volatility of underlying stock, low to test N drift
+    t = 0.5 # time to expiry, low to test N drift
+    q = 0.0 # no continuous dividend yield
+    cp = "call"
+    eps = 0.01
+
+    expected_delta = (black_scholes(k,s+eps,r,sigma,t,q,cp) - black_scholes(k,s-eps,r,sigma,t,q,cp)) / (2*eps)
+
+    actual_delta = black_scholes_delta(k,s,r,sigma,t,q,cp)
+
+    assert actual_delta == pytest.approx(expected_delta,abs=1e-4), f"Delta test failed, expected {expected_delta}, but got {actual_delta}."
+
 
 def test_binomial_convergence():
     pytest.skip("No binomial convergence tests created.")
