@@ -4,7 +4,14 @@ import numpy as np
 import pandas as pd
 from datetime import date, timedelta
 from models import black_scholes
+import requests
+from ratelimit import limits, sleep_and_retry
 
+CALLS = 10
+RATE_LIMIT = 60
+
+@sleep_and_retry
+@limits(calls=CALLS,period=RATE_LIMIT)
 def homepage():
 
     # page text
