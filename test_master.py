@@ -2,7 +2,7 @@ import math
 import pytest
 from scipy.stats import norm 
 
-from models import black_scholes, black_scholes_delta
+from models import black_scholes, black_scholes_delta, binomial_crr
 
 @pytest.mark.parametrize("cp, expected", [("call",4.76),("put",0.8086)])
 def test_textbook_bs(cp,expected):
@@ -17,7 +17,7 @@ def test_textbook_bs(cp,expected):
 
     actual_price = black_scholes(k,s,r,sigma,t,q,cp)
 
-    assert actual_price == pytest.approx(expected, abs=0.005), f"Call BS w/ textbook inputs did not yield the expected {expected}, yielded{actual_call_price}."
+    assert actual_price == pytest.approx(expected, abs=0.005), f"Call BS w/ textbook inputs did not yield the expected {expected}, yielded{actual_price}."
 
 
 def test_pc_parity():
@@ -166,6 +166,23 @@ def test_div_monotonicity(cp,r,t,sigma,s,k):
 
         assert higher_yield_put_price > lower_yield_put_price, "The put price for the higher dividend yield should've been higher, but wasn't."
 
+@pytest.mark.parametrize("n",[1,2])
+def test_binomial_crr(n):
+    s = 100 # keeps at the money
+    k = 100
+    r = 0.05
+    q = 0.0
+    sigma = 0.2
+    t = 1.0
+    cp = "call"
+    o_type = "european"
 
-def test_binomial_convergence():
-    pytest.skip("No binomial convergence tests created.")
+    if n == 1:
+        assert binomial_crr(k,s,r,sigma,t,q,cp,n,o_type) == pytest.approx(12.17, abs=0.01)
+    elif n == 2:
+        assert binomial_crr(k,s,r,sigma,t,q,cp,n,o_type) == pytest.approx(9.55, abs=0.01)
+
+def test_binomial_convergence(cp,q,r,s,k,t,sigma):
+
+    # use n = 500 to see if binomial crr converges on black scholes
+    assert binomial_crr(k,s,r,sigma,t,q,cp,500,"european") == pytest.approx(black_scholes(k,s,r,sigma,t,q,cp), abs=0.01)
