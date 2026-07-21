@@ -1,1 +1,5 @@
 scipy
+streamlit
+yfinance
+numpy
+pandas
