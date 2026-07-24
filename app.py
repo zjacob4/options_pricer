@@ -21,18 +21,18 @@ def homepage():
     with st.form("options_form"):
 
         # store user input variables
-        ticker = st.text_input("Underlying Ticker")
+        ticker = st.text_input("Underlying Ticker", key="ticker")
 
         # enter strike price
-        k = st.text_input("Strike Price")
+        k = st.text_input("Strike Price",key="k")
         
         # enter option type
-        cp = st.text_input("Call or Put?")
+        cp = st.text_input("Call or Put?",key="cp")
 
         # get expiration date
-        expiry = st.text_input("Expiry", placeholder="mm/dd/yyyy")
+        expiry = st.text_input("Expiry", placeholder="mm/dd/yyyy",key="expiry")
 
-        submitted = st.form_submit_button("Calculate Options Price")
+        submitted = st.form_submit_button("Calculate Options Price",key="submit_options_form")
 
     if submitted:
 
@@ -43,27 +43,24 @@ def homepage():
 
             # get underlying stock price from yfinance api
             s = ticker_init.history(period="1d")["Close"].iloc[-1]
+            price_history = ticker_init.history(period="1y")["Close"]
 
             cp = cp.lower() # standardize option type text format
 
             # get annualized historical volatiliy
-            df = yf.download(ticker, period="1y") # get 1y price history
-            df["Log_Return"] = np.log(df["Close"] / df["Close"].shift(1)) # create new column documenting log returns
-            daily_vol = df["Log_Return"].std() # daily standard deviation
-            sigma = daily_vol * np.sqrt(252) # annualized volatility
-
-            # get dividend yield
-            q = ticker_init.info.get("dividendYield",0)
-            if q == None:
-                q = 0 # handling no dividend for calculation
+            sigma = get_sigma(price_history)
 
             # get time to expiry
-            today = date.today()
-            [month,day,year] = expiry.split("/")
-            t_days = (date(int(year),int(month),int(day)) - today) / timedelta(days=1)
-            t = t_days / 365
+            t = get_t(expiry)
 
-            # get 3-year t-bond rate for risk-free rate
+            # get dividend yield
+            q = get_q(ticker_init)
+
+            # handle negative time
+            if t < 0:
+                raise ValueError("Time to expiry cannot be negative.")
+
+            # get risk-free rate
             if t < 0.33:
                 treasury_ticker = "^IRX"   # 3-Month Treasury Bill
             elif t < 5:
@@ -77,6 +74,30 @@ def homepage():
             # run black-scholes with inputted variables
             options_price = black_scholes(k,s,r,sigma,t,q,cp)
         st.success(options_price)
+
+def get_sigma(price_history):
+    log_return = np.log(price_history / price_history.shift(1)) # create new column documenting log returns
+    daily_vol = log_return.std() # daily standard deviation
+    sigma = daily_vol * np.sqrt(252) # annualized volatility
+    return sigma
+
+def get_t(expiry):
+    today = date.today()
+    [month,day,year] = expiry.split("/")
+    t_days = (date(int(year),int(month),int(day)) - today) / timedelta(days=1)
+    t = t_days / 365
+    return t
+
+def get_q(ticker_init):
+    
+    # get dividend yield
+    q = ticker_init.info.get("dividendYield",0)
+    if q == None:
+        q = 0 # handling no dividend for calculation
+    if q > 1:
+        raise ValueError("Dividend greater than 100%")
+    
+    return q
 
 if __name__ == "__main__":
     homepage()
