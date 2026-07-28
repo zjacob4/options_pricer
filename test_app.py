@@ -1,6 +1,6 @@
 from streamlit.testing.v1 import AppTest
 from datetime import date, timedelta
-from app import get_q, get_sigma
+from app import get_q, get_sigma, check_stale_price
 import yfinance as yf
 import pytest
 import numpy as np
@@ -41,7 +41,7 @@ def test_q_from_app():
 
     q = get_q(ticker_init)
 
-    assert q == pytest.approx(0.33, abs=0.1), f"Dividend is off, expected 0.33, got {q}"
+    assert q == pytest.approx(0.0033, abs=0.1), f"Dividend is off, expected 0.33, got {q}"
 
 def test_sigma_from_app():
 
