@@ -124,7 +124,7 @@ def break_taxonomy(df):
     return df
 
 def check_stale_price(df):
-    df["stale"] = (df["bid"] == 0) | ((df["ask"] - df["bid"]) > df["price"]*0.5)
+    df["stale"] = np.where(((df["bid"] == 0) | ((df["ask"] - df["bid"]) > df["price"]*0.5) | (df["price"] < df["intrinsic_value"])), True, False)
     return df
 
 
