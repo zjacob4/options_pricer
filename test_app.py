@@ -6,35 +6,6 @@ import pytest
 import numpy as np
 import pandas as pd
 
-def test_negative_t():
-    
-    # Initialize streamlit app
-    at = AppTest.from_file("app.py")
-    at.run(timeout=30)
-
-    # set inputs
-    at.text_input(key="ticker").set_value("aapl")
-    at.text_input(key="k").set_value("200")
-    at.text_input(key="cp").set_value("call")
-    at.text_input(key="expiry").set_value("05/22/2026") # set a date in the past for negative t
-
-    # click the submit button with new inputs
-    at.button(key="submit_options_form").click()
-
-    # run the app to process submission
-    at.run(timeout=30)
-
-    # assert that an exception was raised
-    assert len(at.exception) > 0, "No exception was raised for negative time to expiry."
-
-    # assert that no additional exceptions were raised
-    assert len(at.exception) == 1, "More than one exception was raised."
-
-    # extract and inspection the exception object
-    app_exception = at.exception[0]
-    
-    # confirm it's a negative time to expiry error
-    assert "Time to expiry cannot be negative" in app_exception.value
 
 def test_q_from_app():
 

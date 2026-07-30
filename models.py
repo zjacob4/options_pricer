@@ -50,6 +50,8 @@ def binomial_crr(k,s,r,sigma,t,q,cp,n,o_type):
     dt = t/n # time left divided by number of intervals/steps
     u = math.exp(sigma*dt**0.5) # up multiplier
     d = 1 / u # down multiplier
+    if u == d:
+        u = d + 1e-10 # avoid u-d = 0
 
     p = (math.exp((r-q)*dt) - d) / (u - d) # up probability
     discount = math.exp(-r*dt) # time discount

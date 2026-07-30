@@ -30,8 +30,8 @@ def homepage():
         # enter option type
         cp = st.text_input("Call or Put?",key="cp")
 
-        # get expiration date
-        expiry = st.text_input("Expiry", placeholder="mm/dd/yyyy",key="expiry")
+        # get expiration date (calendar disallows dates before today)
+        expiry = st.date_input("Expiry", min_value=date.today(), key="expiry")
 
         submitted = st.form_submit_button("Calculate Options Price",key="submit_options_form")
 
